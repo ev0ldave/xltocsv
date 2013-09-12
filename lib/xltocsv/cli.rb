@@ -21,12 +21,12 @@ module Xltocsv
     def convert
       ## change excel files to csv
       if @opts[:format] == "all"
-        xls(@opts[:input],@opts[:output],@opts[:filter])
-        xlsx(@opts[:input],@opts[:output],@opts[:filter])
+        xls(@opts[:input],@opts[:output],@opts[:regex])
+        xlsx(@opts[:input],@opts[:output],@opts[:regex])
       elsif @opts[:format] == "xls"
-        xls(@opts[:input],@opts[:output],@opts[:filter])
+        xls(@opts[:input],@opts[:output],@opts[:regex])
       elsif @opts[:format] == "xlsx"
-        xlsx(@opts[:input],@opts[:output],@opts[:filter])
+        xlsx(@opts[:input],@opts[:output],@opts[:regex])
       else
         raise ArgumentError, 'unrecognized format'
       end
@@ -58,20 +58,19 @@ module Xltocsv
 
     def filter(file)
       tmp = Tempfile.new("extract")
-      open(file, 'r').each { |l| tmp << l unless l.chomp =~ /(#{@opts[:filter].join(')|(')})/ }
+      open(file, 'r').each { |l| tmp << l unless l.chomp =~ /(#{@opts[:regex].join(')|(')})/ }
       tmp.close
       FileUtils.mv(tmp.path, file)
     end
 
     def self.parse_args(args)
-      @opts = Trollop::options args do
-        opt :input, "Directory containing xls/xlsx files", :type => :string, :require => true
+      opts = Trollop::options args do
+        opt :input, "Directory containing xls/xlsx files", :type => :string, :required => true
         opt :output, "Output Directory for csv", :type => :string, :default => "/tmp"
         opt :format, "Original filetype (xls, xlsx or all)", :type => :string, :default => "all"
-        opt :regex, "regular expressions to exlude lines from csv", :type => :strings
+        opt :regex, "regular expressions to exlude lines from csv", :multi => true, :type => :string
         version "xltocsv #{Xltocsv::VERSION}"
       end 
-      Trollop::die :input, "This is a required path to xls/xlsx files" if opts[:input].nil? 
     end  
 
   end
